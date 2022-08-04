@@ -1,6 +1,8 @@
 import glob
 import os
 import pathlib
+import pickle
+from queue import Empty
 from kivy.factory import Factory
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
@@ -36,6 +38,8 @@ class MainWidget(GridLayout):
         super(MainWidget, self).__init__(**kwargs)
         self.coordinate_camera = {}
         self.coordinate_robot = {}
+        self.camera_mtx = []
+        self.camera_dist = []
         self.T = []
         
         try:
@@ -46,6 +50,20 @@ class MainWidget(GridLayout):
         except:
             robot_status = ""
 
+        # read value from file
+        # self.camera_mtx = self.read_coor_from_file('camera_mtx')
+        # self.camera_dist = self.read_coor_from_file('camera_dist')
+        # self.coordinate_camera = self.read_coor_from_file('coordinate_camera')
+        # self.coordinate_robot = self.read_coor_from_file('coordinate_robot')
+
+        # print(self.camera_mtx)
+        # print(self.camera_dist)
+        # print(self.coordinate_camera)
+        # print(self.coordinate_robot)
+        # print(self.camera_mtx.dtype)
+        # print(self.camera_dist.dtype)
+        # print(self.coordinate_camera.dtype)
+        # print(self.coordinate_robo.dtypet)
         ###########################     WIDGET      ###########################
         Window.size = (1600, 900)
         self.cols = 2
@@ -170,19 +188,23 @@ class MainWidget(GridLayout):
         self.input_marker_row = TextInput(text='3', multiline=False)
         right_grid_2_1.add_widget(self.input_marker_row)
         right_grid_2_1.add_widget(Label(text ="Marker Column"))
-        self.input_marker_column = TextInput(text='4', multiline=False)
+        self.input_marker_column = TextInput(text='3', multiline=False)
         right_grid_2_1.add_widget(self.input_marker_column)
         right_grid_2_1.add_widget(Label(text ="Marker Length"))
-        self.input_marker_length = TextInput(text='3', multiline=False)
+        self.input_marker_length = TextInput(text='0.03', multiline=False)
         right_grid_2_1.add_widget(self.input_marker_length)
         right_grid_2_1.add_widget(Label(text ="Marker Separation"))
-        self.input_marker_separation = TextInput(text='3', multiline=False)
+        self.input_marker_separation = TextInput(text='0.03', multiline=False)
         right_grid_2_1.add_widget(self.input_marker_separation)
         right_grid_2_1.add_widget(Label(text ="Image Taken"))
         self.img_taken_camera = Label(text ="---")
         right_grid_2_1.add_widget(self.img_taken_camera)
         right_grid_2_1.add_widget(Label(text ="Status Calibration"))
-        self.status_camera_calib = Label(text ="---")
+
+        if (len(self.camera_dist) == 0 or len(self.camera_mtx) == 0):
+            self.status_camera_calib = Label(text ="---")
+        else:
+            self.status_camera_calib = Label(text ="Done")
         right_grid_2_1.add_widget(self.status_camera_calib)
         right_grid_2.add_widget(right_grid_2_1)
 
@@ -221,9 +243,19 @@ class MainWidget(GridLayout):
         right_grid_3_1.add_widget(Label(text =" "))
         right_grid_3_1.add_widget(Label(text ="Status Calibration"))
         self.status_marker_calib = Label(text ="---")
-        right_grid_3_1.add_widget(self.status_marker_calib)
-        right_grid_3_1.add_widget(Label(text ="Marker ID"))
         self.status_marker_id = Label(text ="---")
+        # if (self.coordinate_camera is Empty):
+        #     self.status_marker_calib = Label(text ="---")
+        #     self.status_marker_id = Label(text ="---")
+        # else:
+        #     self.status_marker_calib = Label(text ="Done")
+        #     # Check Marker Id
+        #     id = []
+        #     for i in self.coordinate_camera:
+        #         id.append(i)
+        #     self.status_marker_id = Label(text = str(id))
+        right_grid_3_1.add_widget(self.status_marker_calib)
+        right_grid_3_1.add_widget(Label(text ="Marker ID"))        
         right_grid_3_1.add_widget(self.status_marker_id)
         right_grid_3.add_widget(right_grid_3_1)
 
@@ -255,7 +287,7 @@ class MainWidget(GridLayout):
         self.image.texture = texture
 
     def take_image(self, *args):
-        path_file = "newapp/data/data_img_{}".format(time.strftime("%Y%m%d"))
+        path_file = "summer_project/data/data_img_{}".format(time.strftime("%Y%m%d"))
         isExist = os.path.exists(path_file)
         if not isExist:
             # Create a new directory because it does not exist 
@@ -268,7 +300,7 @@ class MainWidget(GridLayout):
         self.wimg.source = "D:/4_KULIAH_S2/Summer_Project/"+name_file        
 
     def take_marker_coordinate(self, *args):
-        path_file = "newapp/data/data_img_coordinate_{}".format(time.strftime("%Y%m%d"))
+        path_file = "summer_project/data/data_img_coordinate_{}".format(time.strftime("%Y%m%d"))
         isExist = os.path.exists(path_file)
         if not isExist:
             # Create a new directory because it does not exist 
@@ -301,6 +333,7 @@ class MainWidget(GridLayout):
                 # print(f'rvec: {marker_rvec} \ntvec: {marker_tvec} \nMarker Points: {marker_points}')
                 self.coordinate_camera[ids[i, 0]] = marker_tvec
             # print(self.coordinate_camera)
+            self.save_coor_to_file(self.coordinate_camera, "coordinate_camera")
             
             # flatten the ArUco IDs list
             ids = ids.flatten()
@@ -334,9 +367,6 @@ class MainWidget(GridLayout):
                 cv2.putText(image, str(markerID),
                     (topLeft[0], topLeft[1] - 15), cv2.FONT_HERSHEY_SIMPLEX,
                     0.5, (0, 255, 0), 2)
-                # print("[INFO] ArUco marker ID: {}".format(markerID))
-                # print(corners)
-                # print((cX, cY))
             
             timestr = time.strftime("%Y%m%d_%H%M%S")
             name_file = path_file+"/IMG_FINAL_{}.png".format(timestr)
@@ -352,7 +382,7 @@ class MainWidget(GridLayout):
             self.status_marker_id.text = str(id)
 
     def calibrate_camera_aruco(self, *args):
-        path_file = "D:/4_KULIAH_S2/Summer_Project/newapp/data/data_img_{}".format(time.strftime("%Y%m%d"))
+        path_file = "D:/4_KULIAH_S2/Summer_Project/summer_project/data/data_img_{}".format(time.strftime("%Y%m%d"))
         isExist = os.path.exists(path_file)
         if isExist:
             # Parameters
@@ -360,10 +390,10 @@ class MainWidget(GridLayout):
             IMAGES_DIR = path_file
             IMAGES_FORMAT = 'png'
             # Dimensions in cm
-            MARKER_LENGTH = self.input_marker_length.text
-            MARKER_SEPARATION = self.input_marker_separation.text
-            MARKER_COLUMN = self.input_marker_column.text
-            MARKER_ROW = self.input_marker_row.text
+            MARKER_LENGTH = float(self.input_marker_length.text)
+            MARKER_SEPARATION = float(self.input_marker_separation.text)
+            MARKER_COLUMN = int(self.input_marker_column.text)
+            MARKER_ROW = int(self.input_marker_row.text)
 
 
             # Calibrate 
@@ -373,22 +403,25 @@ class MainWidget(GridLayout):
             # value = 'ret: \n' + str(self.camera_ret) +  '\nmtx: \n' + str(self.camera_mtx) + '\ndist: \n' + str(self.camera_dist) + '\nrvecs: \n' + str(self.camera_rvecs) + '\ntvecs: \n' + str(self.camera_tvecs)
             self.status_camera_calib.text = "Done"
 
-    def calculate_matrix_calibration(self, *args):
-        if len(self.T) == 0:
-            coordinate_camera_final = []
-            coordinate_robot_final =[]
-            # self.coordinate_camera = {20: np.array([[[0.04888045, 0.09148062, 0.12402982]]]), 19: np.array([[[-0.01193025,  0.08838566,  0.12556833]]]), 18: np.array([[[0.06184643, 0.06304886, 0.11061687]]]), 17: np.array([[[0.01484706, 0.04964583, 0.09164608]]]), 15: np.array([[[0.06532707, 0.03628157, 0.10382273]]]), 14: np.array([[[0.018052  , 0.03092919, 0.10757335]]]), 13: np.array([[[-0.02221715,  0.03228272,  0.14029477]]]), 12: np.array([[[0.05713511, 0.00672016, 0.09208862]]]), 11: np.array([[[0.02253797, 0.00348555, 0.10860747]]]), 10: np.array([[[-0.0170234 ,  0.00127501,  0.13091908]]]), 16: np.array([[[-0.02224941,  0.05776922,  0.13159079]]])}
-            # self.coordinate_robot = {10: [314.6173, 88.1064, 3.3814], 12: [318.0391, -38.2362, 6.5931], 16: [216.7835, 80.9594, 7.7376], 18: [224.7487, -39.7083, 10.0368]}
-            # self.T = np.array([[229.7920632, -1177.28502426, 8.64460852], [-1711.80828373, -246.95491647, 78.56459402], [110.69104359, 970.68616215, -55.18432471], [306.2201453, -58.70146321, 10.65307101]])
+            #save to file
+            self.save_coor_to_file(self.camera_mtx, "camera_mtx")
+            self.save_coor_to_file(self.camera_dist, "camera_dist")
 
-            for i in self.coordinate_camera:
-                for j in self.coordinate_robot:
-                    if i == j:
-                        coordinate_camera_final.append(np.append(self.coordinate_camera[i], 1))
-                        coordinate_robot_final.append(self.coordinate_robot[i])
-            # print(coordinate_camera_final)
-            # print(coordinate_robot_final)
-            self.T = np.dot(np.linalg.inv(coordinate_camera_final), coordinate_robot_final)
+    def calculate_matrix_calibration(self, *args):
+        coordinate_camera_final = []
+        coordinate_robot_final =[]
+        # self.coordinate_camera = {20: np.array([[[0.04888045, 0.09148062, 0.12402982]]]), 19: np.array([[[-0.01193025,  0.08838566,  0.12556833]]]), 18: np.array([[[0.06184643, 0.06304886, 0.11061687]]]), 17: np.array([[[0.01484706, 0.04964583, 0.09164608]]]), 15: np.array([[[0.06532707, 0.03628157, 0.10382273]]]), 14: np.array([[[0.018052  , 0.03092919, 0.10757335]]]), 13: np.array([[[-0.02221715,  0.03228272,  0.14029477]]]), 12: np.array([[[0.05713511, 0.00672016, 0.09208862]]]), 11: np.array([[[0.02253797, 0.00348555, 0.10860747]]]), 10: np.array([[[-0.0170234 ,  0.00127501,  0.13091908]]]), 16: np.array([[[-0.02224941,  0.05776922,  0.13159079]]])}
+        # self.coordinate_robot = {10: [314.6173, 88.1064, 3.3814], 12: [318.0391, -38.2362, 6.5931], 16: [216.7835, 80.9594, 7.7376], 18: [224.7487, -39.7083, 10.0368]}
+        # self.T = np.array([[229.7920632, -1177.28502426, 8.64460852], [-1711.80828373, -246.95491647, 78.56459402], [110.69104359, 970.68616215, -55.18432471], [306.2201453, -58.70146321, 10.65307101]])
+
+        for i in self.coordinate_camera:
+            for j in self.coordinate_robot:
+                if i == j:
+                    coordinate_camera_final.append(np.append(self.coordinate_camera[i], 1))
+                    coordinate_robot_final.append(self.coordinate_robot[i])
+        # print(coordinate_camera_final)
+        # print(coordinate_robot_final)
+        self.T = np.dot(np.linalg.inv(coordinate_camera_final), coordinate_robot_final)
             # print(self.T)
         tvec = np.append(self.coordinate_camera[int(self.input_marker_id.text)], 1)
         tvec = np.array(tvec).reshape(1,4)
@@ -396,7 +429,7 @@ class MainWidget(GridLayout):
         # print(round(coor[0][0], 4))
         # print(round(coor[0][1], 4))
         # print(round(coor[0][2], 4))
-        self.move_robot(round(coor[0][0], 4), round(coor[0][1], 4), round(coor[0][2], 4))
+        self.robot_test_move(round(coor[0][0], 4), round(coor[0][1], 4), round(coor[0][2], 4))
         # self.swift.set_position(round(coor[0][0], 4), round(coor[0][1], 4), round(coor[0][2], 4), speed=30, wait=True)
         status = self.terminal_robot.text + "Robot Coordinate: " + str(coor) + "\n"
         self.terminal_robot.text = status
@@ -408,14 +441,15 @@ class MainWidget(GridLayout):
         '''
         aruco_dict = aruco.Dictionary_get(aruco.DICT_ARUCO_ORIGINAL)
         arucoParams = aruco.DetectorParameters_create()
-        board = aruco.GridBoard_create(int(marker_row), int(marker_column), int(marker_length), int(marker_separation), aruco_dict)
+        board = aruco.GridBoard_create(int(marker_row), int(marker_column), float(marker_length), float(marker_separation), aruco_dict, firstMarker=10)   # meters
 
         counter, corners_list, id_list = [], [], []
         img_dir = pathlib.Path(dirpath)
         first = 0
         # Find the ArUco markers inside each image
+        # print(img_dir.glob(f'*.{image_format}'))
         for img in img_dir.glob(f'*.{image_format}'):
-            #print(img)
+            # print(img)
             image_input = cv2.imread(str(img), 0)
             #img_gray = cv2.cvtColor(image_input, cv2.COLOR_BGR2GRAY)
             #cv2.imshow('image',image_input)
@@ -425,6 +459,8 @@ class MainWidget(GridLayout):
                 aruco_dict, 
                 parameters=arucoParams
             )
+            print(corners)
+            print(ids)
             if first == 0:
                 corners_list = corners
                 id_list = ids
@@ -437,9 +473,18 @@ class MainWidget(GridLayout):
 
         counter = np.array(counter)
         # Actual calibration
+        # drop the counter if different value
+        # check shape for id_liist and corner_list
+        # print(corners_list)
+        # print(id_list)
+        # print(counter)
+        # print(board)
+        # print(corners_list.shape)
+        # print(id_list.shape)
+        # print(counter.shape)
         ret, mtx, dist, rvecs, tvecs = aruco.calibrateCameraAruco(
-            corners_list, 
-            id_list,
+            corners_list,       # ex: (63, 1, 4, 2) --> (corner*img*num_img)
+            id_list,            # ex: (63, 1) --> (corner*img*num_img)
             counter, 
             board, 
             image_input.shape, 
@@ -448,9 +493,11 @@ class MainWidget(GridLayout):
         )
         return ret, mtx, dist, rvecs, tvecs
 
-    def move_robot(self, x, y, z, speed=30, wait=True):
+    def robot_test_move(self, x, y, z, speed=30, wait=True):
         # X, Y, Z, SPEED
         self.swift.set_position(x, y, z, speed=speed, wait=wait)
+        time.sleep(2)
+        self.swift.reset()
     
     def robot_calibration(self, *args):
         if self.status_robot.text != "Connected":
@@ -493,8 +540,10 @@ class MainWidget(GridLayout):
             self.robot_calibration_z = TextInput(multiline=True, text='' , disabled=True)
             popup_label_5 = Label(text = "Marker ID")
             self.robot_calibration_markerid = TextInput(multiline=True, text='')
-            check_button = Button(text = "Check Coordinate")
+            check_button = Button(text = "Get Coordinate")
             check_button.bind(on_press = self.print_coordinate) 
+            save_button = Button(text = "Save Coordinate")
+            save_button.bind(on_press = self.save_coordinate) 
             layout_2_2.add_widget(popup_label_2)
             layout_2_2.add_widget(self.robot_calibration_x)
             layout_2_2.add_widget(popup_label_3)
@@ -504,11 +553,12 @@ class MainWidget(GridLayout):
             layout_2_2.add_widget(popup_label_5)
             layout_2_2.add_widget(self.robot_calibration_markerid)
             layout_2_2.add_widget(check_button)
+            layout_2_2.add_widget(save_button)
             layout_2.add_widget(layout_2_2)
 
             layout_end = GridLayout(cols = 2, rows = 1, size_hint_y = None, height = 60, padding = 5)
-            save_button = Button(text = "Save", font_size=16, size_hint=(.15, .15))
-            save_button.bind(on_press = self.save_coordinate) 
+            save_button = Button(text = "Done", font_size=16, size_hint=(.15, .15))
+            save_button.bind(on_press = self.attach_servo) 
             close_button = Button(text = "Close", font_size=16, size_hint=(.15, .15))
             layout_end.add_widget(save_button)
             layout_end.add_widget(close_button)
@@ -637,22 +687,53 @@ class MainWidget(GridLayout):
         self.swift.set_servo_detach()
 
     def print_coordinate(self, *args):
-        self.swift.set_servo_attach()
-        position = self.swift.get_position()
-        self.robot_calibration_x.text = str(position[0])
-        self.robot_calibration_y.text = str(position[1])
-        self.robot_calibration_z.text = str(position[2])
+        self.position = self.swift.get_position()
+        self.robot_calibration_x.text = str(self.position[0])
+        self.robot_calibration_y.text = str(self.position[1])
+        self.robot_calibration_z.text = str(self.position[2])
     
+    def attach_servo(self, *args):
+        self.swift.set_servo_attach()
+        self.save_coor_to_file(self.coordinate_robot, "coordinate_robot")
+   
     def save_coordinate(self, *args):
-        position = self.swift.get_position()
-        self.coordinate_robot[int(self.robot_calibration_markerid.text)] = position
+        # position = self.swift.get_position()
+        self.coordinate_robot[int(self.robot_calibration_markerid.text)] =  self.position
         if self.terminal_robot.text == "":
-            status = "Marked ID: " + str(self.robot_calibration_markerid.text) + " | X: " + str(position[0]) + " Y: " + str(position[1]) + " Z: " + str(position[2]) + "\n"
+            status = "Marked ID: " + str(self.robot_calibration_markerid.text) + " | X: " + str( self.position[0]) + " Y: " + str(self.position[1]) + " Z: " + str(self.position[2]) + "\n"
         else:
-            status = self.terminal_robot.text + "Marked ID: " + str(self.robot_calibration_markerid.text) + " | X: " + str(position[0]) + " Y: " + str(position[1]) + " Z: " + str(position[2]) + "\n"
+            status = self.terminal_robot.text + "Marked ID: " + str(self.robot_calibration_markerid.text) + " | X: " + str(self.position[0]) + " Y: " + str(self.position[1]) + " Z: " + str(self.position[2]) + "\n"
         
         self.terminal_robot.text = status
         print(self.coordinate_robot)
+
+    def save_coor_to_file(self, data, name, *args):
+        path_file = "D:/4_KULIAH_S2/Summer_Project/summer_project/data/data_coor_{}".format(time.strftime("%Y%m%d"))
+        isExist = os.path.exists(path_file)
+        if not isExist:
+            # Create a new directory because it does not exist 
+            os.makedirs(path_file)
+            # print("Folder Created")
+        
+        f = open(path_file + '/' + name + '.pkl',"wb")
+
+        # write file
+        # f.write( data )
+        pickle.dump(data, f)
+
+        # close file
+        f.close()
+
+    def read_coor_from_file(self, name, *args):
+        path_file = "D:/4_KULIAH_S2/Summer_Project/summer_project/data/data_coor_{}".format(time.strftime("%Y%m%d")) + "/" + name + ".pkl"
+        isExist = os.path.exists(path_file)
+        if not isExist:
+            return
+        
+        f = open(path_file, "rb")
+
+        # write file
+        return pickle.load(f)
 
 class MyApp(App):
     def build(self):

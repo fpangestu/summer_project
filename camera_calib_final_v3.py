@@ -405,6 +405,7 @@ class MainWidget(GridLayout):
     def calibrate_aruco(self, marker_row, marker_column, dirpath, image_format, marker_length, marker_separation):
         '''Apply camera calibration using aruco.
         The dimensions are in cm.
+        :param marker_row
         '''
         aruco_dict = aruco.Dictionary_get(aruco.DICT_ARUCO_ORIGINAL)
         arucoParams = aruco.DetectorParameters_create()
