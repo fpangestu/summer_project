@@ -18,7 +18,7 @@ This project aims to create an application to control a robot so that it can mov
 	The library only supports uArm Swift/SwiftPro.
 	- Download uArm-Python-SDK from original [repositori](https://github.com/uArm-Developer/uArm-Python-SDK/tree/2.0)
 	- Use the package manager [pip](https://pip.pypa.io/en/stable/) to install uArm-Python-SDK.
-	- 
+	
 	```bash
 	python setup.py install
 	```
