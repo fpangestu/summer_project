@@ -10,6 +10,7 @@ This project aims to create an application to control a robot so that it can mov
 ## Instalation
 1. Kivy 2.1.0
 	Use the package manager [pip](https://pip.pypa.io/en/stable/) to install [Kivy](https://kivy.org/).
+	
 	```bash
 	pip install Kivy
 	```
@@ -17,11 +18,13 @@ This project aims to create an application to control a robot so that it can mov
 	The library only supports uArm Swift/SwiftPro.
 	- Download uArm-Python-SDK from original [repositori](https://github.com/uArm-Developer/uArm-Python-SDK/tree/2.0)
 	- Use the package manager [pip](https://pip.pypa.io/en/stable/) to install uArm-Python-SDK.
+	- 
 	```bash
 	python setup.py install
 	```
 3. Mediapipe 0.8.10.1
 	Use the package manager [pip](https://pip.pypa.io/en/stable/) to install [Mediapipe](https://google.github.io/mediapipe/getting_started/python).
+	
 	```bash
 	pip install mediapipe
 	```
