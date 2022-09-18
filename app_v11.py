@@ -29,7 +29,9 @@ import numpy as np
 
 from uarm.wrapper import SwiftAPI
 
-import mediapipe.main as mediapipe
+import sys
+sys.path.insert(0, 'D:/4_KULIAH_S2/Summer_Project/summer_project/mediapipe')
+from mdp_main import Mediapipe
 
 
 ## GRID LAYOUT
@@ -44,7 +46,12 @@ class MainWidget(GridLayout):
         self.obj_position = {}
         self.robot_parkir = []
 
+        # Image
         self.object_default = 'test.png'
+        gesture_1 = 'gesture_1.jpg'
+        gesture_2 = 'gesture_2.jpg'
+        gesture_3 = 'gesture_3.jpg'
+        gesture_4 = 'gesture_4.jpg'
 
         # Information
         self.inf_status_camera_calib = ""
@@ -104,15 +111,30 @@ class MainWidget(GridLayout):
             cols = 2,
             rows = 1
         )
-        self.camera_cv  = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-        Clock.schedule_interval(self.load_video, 1.0/10.0)
+        self.camera_cv  = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        self.camera_cv.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.camera_cv.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.image = Image()
+        Clock.schedule_interval(self.load_video, 1.0/11.0)
         left_grid_1.add_widget(self.image)
 
-        Clock.schedule_interval(self.load_video_2, 1.0/10.0)
+        self.camera_cv_robot  = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        self.camera_cv_robot.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.camera_cv_robot.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.image_2 = Image()
+        Clock.schedule_interval(self.load_video_2, 1.0/4.0)
         left_grid_1.add_widget(self.image_2)
         left_grid.add_widget(left_grid_1)
+
+        # self.camera_cv  = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        # self.camera_cv_robot  = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        # Clock.schedule_interval(self.load_video, 1.0/9.0)
+        # Clock.schedule_interval(self.load_video_2, 1.0/10.0)
+        # self.image = Image()
+        # self.image_2 = Image()
+        # left_grid_1.add_widget(self.image)
+        # left_grid_1.add_widget(self.image_2)
+        # left_grid.add_widget(left_grid_1)
 
         # Left Grid 2
         left_grid_2 = GridLayout(
@@ -132,14 +154,21 @@ class MainWidget(GridLayout):
         left_grid_2.add_widget(left_grid_2_0)
         left_grid_2_1 = GridLayout(
                 size_hint_x = None,
-                width = 200,
+                width = 350,
                 padding = 5,
                 cols = 1,
                 rows = 5
             )
         left_grid_2_1.add_widget(Label(text = "Object 1", size_hint=(.2, .2)))
+        left_grid_2_1_1 = GridLayout(
+                cols = 2,
+                rows = 1
+            )
         self.object_1 = Image(source=self.object_default)
-        left_grid_2_1.add_widget(self.object_1)
+        left_grid_2_1_1.add_widget(self.object_1)
+        show_gesture_1 = Image(source=gesture_1)
+        left_grid_2_1_1.add_widget(show_gesture_1)
+        left_grid_2_1.add_widget(left_grid_2_1_1)
         self.input_object_name = TextInput(text='1', multiline=False, size_hint=(.2, .2))
         left_grid_2_1.add_widget(self.input_object_name)
         self.input_object_z = TextInput(text='12', multiline=False, size_hint=(.2, .2))
@@ -150,14 +179,21 @@ class MainWidget(GridLayout):
         left_grid_2.add_widget(left_grid_2_1)
         left_grid_2_2 = GridLayout(
                 size_hint_x = None,
-                width = 200,
+                width = 350,
                 padding = 5,
                 cols = 1,
                 rows = 5
             )
         left_grid_2_2.add_widget(Label(text = "Object 2", size_hint=(.2, .2)))
+        left_grid_2_2_1 = GridLayout(
+                cols = 2,
+                rows = 1
+            )
         self.object_2 = Image(source=self.object_default)
-        left_grid_2_2.add_widget(self.object_2)
+        left_grid_2_2_1.add_widget(self.object_2)
+        show_gesture_2 = Image(source=gesture_2)
+        left_grid_2_2_1.add_widget(show_gesture_2)
+        left_grid_2_2.add_widget(left_grid_2_2_1)
         self.input_object_name = TextInput(text='1', multiline=False, size_hint=(.2, .2))
         left_grid_2_2.add_widget(self.input_object_name)
         self.input_object_z = TextInput(text='12', multiline=False, size_hint=(.2, .2))
@@ -168,14 +204,21 @@ class MainWidget(GridLayout):
         left_grid_2.add_widget(left_grid_2_2)
         left_grid_2_3 = GridLayout(
                 size_hint_x = None,
-                width = 200,
+                width = 350,
                 padding = 5,
                 cols = 1,
                 rows = 5
             )
         left_grid_2_3.add_widget(Label(text = "Object 3", size_hint=(.2, .2)))
+        left_grid_2_3_1 = GridLayout(
+                cols = 2,
+                rows = 1
+            )
         self.object_3 = Image(source=self.object_default)
-        left_grid_2_3.add_widget(self.object_3)
+        left_grid_2_3_1.add_widget(self.object_3)
+        show_gesture_3 = Image(source=gesture_3)
+        left_grid_2_3_1.add_widget(show_gesture_3)        
+        left_grid_2_3.add_widget(left_grid_2_3_1)
         self.input_object_name = TextInput(text='1', multiline=False, size_hint=(.2, .2))
         left_grid_2_3.add_widget(self.input_object_name)
         self.input_object_z = TextInput(text='12', multiline=False, size_hint=(.2, .2))
@@ -186,14 +229,21 @@ class MainWidget(GridLayout):
         left_grid_2.add_widget(left_grid_2_3)
         left_grid_2_4 = GridLayout(
                 size_hint_x = None,
-                width = 200,
+                width = 350,
                 padding = 5,
                 cols = 1,
                 rows = 5
             )
         left_grid_2_4.add_widget(Label(text = "Object 4", size_hint=(.2, .2)))
+        left_grid_2_4_1 = GridLayout(
+                cols = 2,
+                rows = 1
+            )
         self.object_4 = Image(source=self.object_default)
-        left_grid_2_4.add_widget(self.object_4)
+        left_grid_2_4_1.add_widget(self.object_4)
+        show_gesture_4 = Image(source=gesture_4)
+        left_grid_2_4_1.add_widget(show_gesture_4)   
+        left_grid_2_4.add_widget(left_grid_2_4_1)
         self.input_object_name = TextInput(text='1', multiline=False, size_hint=(.2, .2))
         left_grid_2_4.add_widget(self.input_object_name)
         self.input_object_z = TextInput(text='12', multiline=False, size_hint=(.2, .2))
@@ -202,63 +252,7 @@ class MainWidget(GridLayout):
         btn_grab_obj.bind(on_press=self.final_calculation)
         left_grid_2_4.add_widget(btn_grab_obj)
         left_grid_2.add_widget(left_grid_2_4)
-        left_grid_2_5 = GridLayout(
-                size_hint_x = None,
-                width = 200,
-                padding = 5,
-                cols = 1,
-                rows = 5
-            )
-        left_grid_2_5.add_widget(Label(text = "Object 5", size_hint=(.2, .2)))
-        self.object_5 = Image(source=self.object_default)
-        left_grid_2_5.add_widget(self.object_5)
-        self.input_object_name = TextInput(text='1', multiline=False, size_hint=(.2, .2))
-        left_grid_2_5.add_widget(self.input_object_name)
-        self.input_object_z = TextInput(text='12', multiline=False, size_hint=(.2, .2))
-        left_grid_2_5.add_widget(self.input_object_z)
-        btn_grab_obj = Button(text="Go", font_size=16, size_hint=(.30, .30))
-        btn_grab_obj.bind(on_press=self.final_calculation)
-        left_grid_2_5.add_widget(btn_grab_obj)
-        left_grid_2.add_widget(left_grid_2_5)
-        left_grid_2_6 = GridLayout(
-                size_hint_x = None,
-                width = 200,
-                padding = 5,
-                cols = 1,
-                rows = 5
-            )
-        left_grid_2_6.add_widget(Label(text = "Object 6", size_hint=(.2, .2)))
-        self.object_6 = Image(source=self.object_default)
-        left_grid_2_6.add_widget(self.object_6)
-        self.input_object_name = TextInput(text='1', multiline=False, size_hint=(.2, .2))
-        left_grid_2_6.add_widget(self.input_object_name)
-        self.input_object_z = TextInput(text='12', multiline=False, size_hint=(.2, .2))
-        left_grid_2_6.add_widget(self.input_object_z)
-        btn_grab_obj = Button(text="Go", font_size=16, size_hint=(.30, .30))
-        btn_grab_obj.bind(on_press=self.final_calculation)
-        left_grid_2_6.add_widget(btn_grab_obj)
-        left_grid_2.add_widget(left_grid_2_6)
-        left_grid_2_7 = GridLayout(
-                size_hint_x = None,
-                width = 200,
-                padding = 5,
-                cols = 1,
-                rows = 5
-            )
-        left_grid_2_7.add_widget(Label(text = "Object 7", size_hint=(.2, .2)))
-        self.object_7 = Image(source=self.object_default)
-        left_grid_2_7.add_widget(self.object_7)
-        self.input_object_name = TextInput(text='1', multiline=False, size_hint=(.2, .2))
-        left_grid_2_7.add_widget(self.input_object_name)
-        self.input_object_z = TextInput(text='12', multiline=False, size_hint=(.2, .2))
-        left_grid_2_7.add_widget(self.input_object_z)
-        btn_grab_obj = Button(text="Go", font_size=16, size_hint=(.30, .30))
-        btn_grab_obj.bind(on_press=self.final_calculation)
-        left_grid_2_7.add_widget(btn_grab_obj)
-        left_grid_2.add_widget(left_grid_2_7)
-
-
-
+        
         left_grid.add_widget(left_grid_2)
 
         ###########################     RIGHT GRID      ###########################
@@ -372,11 +366,16 @@ class MainWidget(GridLayout):
             image texture (texture): OpenGL textures for Kivy images
         """
         ret, frame = self.camera_cv.read()                                                          # Get frame from camera device
+        self.image_frame = frame
+        
+        # Hand Gesture
+        mediapipe = Mediapipe()
+        mdp_frame = mediapipe.main(frame)
+        
 
         # Convert frame into texture for Kivy
-        self.image_frame = frame
-        buffer = cv2.flip(frame, 0).tostring()                                                      
-        texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')             
+        buffer = cv2.flip(mdp_frame, 0).tostring()                                                      
+        texture = Texture.create(size=(mdp_frame.shape[1], mdp_frame.shape[0]), colorfmt='bgr')             
         texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
         self.image.texture = texture
 
@@ -392,8 +391,8 @@ class MainWidget(GridLayout):
             1. image texture (texture): Image texture that contain area for placec object
             2. ROI of image (texture): Portioan of image that contain object
         """
-        
-        frame_2 = self.image_frame.copy()
+        ret, frame_robot = self.camera_cv_robot.read()    
+        frame_2 = frame_robot
         frame_gray = cv2.cvtColor(frame_2, cv2.COLOR_BGR2GRAY)                                      # Convert into gray
 
         # Remove noise by blurring with a Gaussian filter ( kernel size = 7 )
@@ -471,12 +470,6 @@ class MainWidget(GridLayout):
                     self.object_3.texture = texture
                 if(obj_id == 4):
                     self.object_4.texture = texture
-                if(obj_id == 5):
-                    self.object_5.texture = texture
-                if(obj_id == 6):
-                    self.object_6.texture = texture
-                else:
-                    self.object_7.texture = texture
                 obj_id += 1
 
         # Convert frame into texture for Kivy
