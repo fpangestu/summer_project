@@ -1,18 +1,28 @@
-- [Summer Project](#summer-project)
-  - [Requirements](#requirements)
-  - [Instalation](#instalation)
-
-# Summer Project
+Table of contents
+=================
 This project aims to create an application to control a robot so that it can move an item (matches) from its original location to the desired location using hand gestures. As an input device, the robot used the [Logitech C922 PRO HD STREAM WEBCAM](https://choosealicense.com/licenses/mit/) and for hand gestures used a laptop webcam. The robot used is [UFACTORY uArm SwiftPro](https://www.ufactory.cc/product-page/ufactory-uarm-test-kit) with Suction Cup.
 
-## Requirements
+Table of contents
+=================
+- [Table of contents](#table-of-contents)
+- [Table of contents](#table-of-contents-1)
+- [Requirements](#requirements)
+- [Instalation](#instalation)
+- [Calibration](#calibration)
+  - [Camera Calibration](#camera-calibration)
+  - [Robot Calibration](#robot-calibration)
+- [Hand Gesture Recognition](#hand-gesture-recognition)
+
+Requirements
+=================
 1. Python 3.10.5
 2. OpenCV Contrib 4.6.0.66
 2. Kivy 2.1.0
 3. uArm-Python-SDK
 4. Mediapipe 0.8.10.1
 
-## Instalation
+Instalation
+=================
 1. Kivy 2.1.0
 	Use the package manager [pip](https://pip.pypa.io/en/stable/) to install [Kivy](https://kivy.org/).
 
@@ -46,3 +56,14 @@ This project aims to create an application to control a robot so that it can mov
 	```bash
 	pip install mediapipe
 	```
+Calibration
+=================
+
+Camera Calibration
+-----------------
+
+Robot Calibration
+-----------------
+
+Hand Gesture Recognition
+=================
