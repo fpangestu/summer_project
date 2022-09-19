@@ -4,7 +4,7 @@ This project aims to create an application to control a robot so that it can mov
 
 Table of contents
 =================
-- [Table of contents](#table-of-contents)
+- [Summer Project](#summer-project)
 - [Table of contents](#table-of-contents-1)
 - [Requirements](#requirements)
 - [Instalation](#instalation)
