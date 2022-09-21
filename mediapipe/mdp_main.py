@@ -17,141 +17,203 @@ from model import PointHistoryClassifier
 
 class Mediapipe:
     def __init__(self):
-        parser = argparse.ArgumentParser()
 
-        parser.add_argument("--device", type=int, default=0)
-        parser.add_argument("--width", help='cap width', type=int, default=960)
-        parser.add_argument("--height", help='cap height', type=int, default=540)
+        use_static_image_mode = True
+        min_detection_confidence = 0.7
+        min_tracking_confidence = 0.5
 
-        parser.add_argument('--use_static_image_mode', action='store_true')
-        parser.add_argument("--min_detection_confidence",
-                            help='min_detection_confidence',
-                            type=float,
-                            default=0.7)
-        parser.add_argument("--min_tracking_confidence",
-                            help='min_tracking_confidence',
-                            type=int,
-                            default=0.5)
-
-        self.args = parser.parse_args()
-    
-    def main(self, frame):
-        # Argument parsing #################################################################
-        # cap_device = args.device
-        # cap_width = args.width
-        # cap_height = args.height
-
-        use_static_image_mode = self.args.use_static_image_mode
-        min_detection_confidence = self.args.min_detection_confidence
-        min_tracking_confidence = self.args.min_tracking_confidence
-
-        use_brect = True
-
-        # Camera preparation ###############################################################
-        # cap = cv.VideoCapture(cap_device)
-        # cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
-        # cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
+        self.use_brect = True
 
         # Model load #############################################################
-        mp_hands = mp.solutions.hands
-        hands = mp_hands.Hands(
+        self.mp_hands = mp.solutions.hands
+        self.hands = self.mp_hands.Hands(
             static_image_mode=use_static_image_mode,
+            model_complexity=0,
             max_num_hands=1,
             min_detection_confidence=min_detection_confidence,
             min_tracking_confidence=min_tracking_confidence,
         )
 
-        keypoint_classifier = KeyPointClassifier()
-
-        point_history_classifier = PointHistoryClassifier()
+        self.keypoint_classifier = KeyPointClassifier()
 
         # Read labels ###########################################################
         with open('D:/4_KULIAH_S2/Summer_Project/summer_project/mediapipe/model/keypoint_classifier/keypoint_classifier_label.csv',
                 encoding='utf-8-sig') as f:
-            keypoint_classifier_labels = csv.reader(f)
-            keypoint_classifier_labels = [
-                row[0] for row in keypoint_classifier_labels
-            ]
-        with open(
-                'D:/4_KULIAH_S2/Summer_Project/summer_project/mediapipe/model/point_history_classifier/point_history_classifier_label.csv',
-                encoding='utf-8-sig') as f:
-            point_history_classifier_labels = csv.reader(f)
-            point_history_classifier_labels = [
-                row[0] for row in point_history_classifier_labels
+            self.keypoint_classifier_labels = csv.reader(f)
+            self.keypoint_classifier_labels = [
+                row[0] for row in self.keypoint_classifier_labels
             ]
 
         # FPS Measurement ########################################################
         # cvFpsCalc = CvFpsCalc(buffer_len=10)
 
         # Coordinate history #################################################################
-        history_length = 16
-        point_history = deque(maxlen=history_length)
+        # history_length = 16
+        # self.point_history = deque(maxlen=history_length)
 
         # Finger gesture history ################################################
-        finger_gesture_history = deque(maxlen=history_length)
-
+        # self.finger_gesture_history = deque(maxlen=history_length)
+        
+        # Var ################################################
+        self.hand_label = ''
+        self.count_hand_label = 0
+        self.status = ''
+       
+    def main(self, frame):
+        # Main APP
         #  ########################################################################
         # mode = 0
-        image = cv.flip(frame, 1)  # Mirror display
-        debug_image = copy.deepcopy(image)
+        self.image = cv.flip(frame, 1)  # Mirror display
+        self.debug_image = copy.deepcopy(self.image)
 
         # Detection implementation #############################################################
-        image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+        self.image = cv.cvtColor(self.image, cv.COLOR_BGR2RGB)
 
-        image.flags.writeable = False
-        results = hands.process(image)
-        image.flags.writeable = True
+        self.image.flags.writeable = False
+        self.results = self.hands.process(self.image)
+        self.image.flags.writeable = True
 
         #  ####################################################################
-        if results.multi_hand_landmarks is not None:
-            for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
-                                                results.multi_handedness):
+        if self.results.multi_hand_landmarks is not None:
+            for self.hand_landmarks, self.handedness in zip(self.results.multi_hand_landmarks,
+                                                self.results.multi_handedness):
                 # Bounding box calculation
-                brect = calc_bounding_rect(debug_image, hand_landmarks)
+                self.brect = self.calc_bounding_rect(self.debug_image, self.hand_landmarks)
+                
                 # Landmark calculation
-                landmark_list = calc_landmark_list(debug_image, hand_landmarks)
+                self.landmark_list = self.calc_landmark_list(self.debug_image, self.hand_landmarks)
 
                 # Conversion to relative coordinates / normalized coordinates
-                pre_processed_landmark_list = pre_process_landmark(
-                    landmark_list)
-                pre_processed_point_history_list = pre_process_point_history(
-                    debug_image, point_history)
-                # Write to the dataset file
-                # logging_csv(number, mode, pre_processed_landmark_list,
-                #             pre_processed_point_history_list)
+                self.pre_processed_landmark_list = self.pre_process_landmark(
+                    self.landmark_list)
 
                 # Hand sign classification
-                hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
-                # if hand_sign_id == 2:  # Point gesture
-                #     point_history.append(landmark_list[8])
-                # else:
-                #     point_history.append([0, 0])
+                self.hand_sign_id = self.keypoint_classifier(self.pre_processed_landmark_list)
 
                 # Finger gesture classification
                 finger_gesture_id = 0
-                point_history_len = len(pre_processed_point_history_list)
-                if point_history_len == (history_length * 2):
-                    finger_gesture_id = point_history_classifier(
-                        pre_processed_point_history_list)
 
                 # Calculates the gesture IDs in the latest detection
-                finger_gesture_history.append(finger_gesture_id)
-                most_common_fg_id = Counter(
-                    finger_gesture_history).most_common()
+                # self.finger_gesture_history.append(finger_gesture_id)
+                # self.most_common_fg_id = Counter(
+                #     self.finger_gesture_history).most_common()
+
+                # Counter
+                if self.hand_label == '':
+                    self.hand_label = self.keypoint_classifier_labels[self.hand_sign_id]
+                    self.count_hand_label = 0
+                else:
+                    temp = self.keypoint_classifier_labels[self.hand_sign_id]
+                    if self.hand_label == temp:
+                        self.count_hand_label = self.count_hand_label + 1
+                    else:
+                        self.hand_label = ''
 
                 # Drawing part
-                debug_image = draw_bounding_rect(use_brect, debug_image, brect)
+                self.debug_image, self.status = self.draw_bounding_rect(
+                    self.use_brect, 
+                    self.debug_image, 
+                    self.brect, 
+                    self.count_hand_label,
+                    self.hand_label)
                 # debug_image = draw_landmarks(debug_image, landmark_list)
-                debug_image = draw_info_text(
-                    debug_image,
-                    brect,
-                    handedness,
-                    keypoint_classifier_labels[hand_sign_id],
-                    point_history_classifier_labels[most_common_fg_id[0][0]],
+                self.debug_image = self.draw_info_text(
+                    self.debug_image,
+                    self.brect,
+                    self.handedness,
+                    self.keypoint_classifier_labels[self.hand_sign_id]
                 )
-        else:
-            point_history.append([0, 0])
-        return debug_image
+        
+        return self.debug_image, self.status
+    
+    def calc_bounding_rect(self, image, landmarks):
+        image_width, image_height = image.shape[1], image.shape[0]
+
+        landmark_array = np.empty((0, 2), int)
+
+        for _, landmark in enumerate(landmarks.landmark):
+            landmark_x = min(int(landmark.x * image_width), image_width - 1)
+            landmark_y = min(int(landmark.y * image_height), image_height - 1)
+
+            landmark_point = [np.array((landmark_x, landmark_y))]
+
+            landmark_array = np.append(landmark_array, landmark_point, axis=0)
+
+        x, y, w, h = cv.boundingRect(landmark_array)
+
+        return [x, y, x + w, y + h]
+    
+    def calc_landmark_list(self, image, landmarks):
+        image_width, image_height = image.shape[1], image.shape[0]
+
+        landmark_point = []
+
+        # Keypoint
+        for _, landmark in enumerate(landmarks.landmark):
+            landmark_x = min(int(landmark.x * image_width), image_width - 1)
+            landmark_y = min(int(landmark.y * image_height), image_height - 1)
+            # landmark_z = landmark.z
+
+            landmark_point.append([landmark_x, landmark_y])
+
+        return landmark_point
+    
+    def pre_process_landmark(self, landmark_list):
+        temp_landmark_list = copy.deepcopy(landmark_list)
+
+        # Convert to relative coordinates
+        base_x, base_y = 0, 0
+        for index, landmark_point in enumerate(temp_landmark_list):
+            if index == 0:
+                base_x, base_y = landmark_point[0], landmark_point[1]
+
+            temp_landmark_list[index][0] = temp_landmark_list[index][0] - base_x
+            temp_landmark_list[index][1] = temp_landmark_list[index][1] - base_y
+
+        # Convert to a one-dimensional list
+        temp_landmark_list = list(
+            itertools.chain.from_iterable(temp_landmark_list))
+
+        # Normalization
+        max_value = max(list(map(abs, temp_landmark_list)))
+
+        def normalize_(n):
+            return n / max_value
+
+        temp_landmark_list = list(map(normalize_, temp_landmark_list))
+
+        return temp_landmark_list
+    
+    def draw_bounding_rect(self, use_brect, image, brect, count, label):
+        if use_brect:
+            # Outer rectangle
+            if count >= 20:
+                cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[3]),
+                            (0, 255, 0), 1)
+                status = label
+                self.count_hand_label = 0
+            else:
+                cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[3]),
+                            (0, 0, 0), 1)
+                status = ''
+
+        return image, status
+
+    def draw_info_text(self, image, brect, handedness, hand_sign_text):
+        cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[1] - 22),
+                    (0, 0, 0), -1)
+
+        info_text = handedness.classification[0].label[0:]
+        if hand_sign_text != "":
+            info_text = info_text + ':' + hand_sign_text
+        cv.putText(image, info_text, (brect[0] + 5, brect[1] - 4),
+                cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
+
+        return image
+
+    def __del__(self):
+        # Realease Memory
+        print ("Object gets destroyed")
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -234,6 +296,8 @@ def main():
 
     #  ########################################################################
     mode = 0
+    hand_label = ''
+    count_hand_label = 0
 
     while True:
         fps = cvFpsCalc.get()
@@ -295,8 +359,21 @@ def main():
                 most_common_fg_id = Counter(
                     finger_gesture_history).most_common()
 
+                # Counter
+                print(keypoint_classifier_labels[hand_sign_id])
+                if hand_label == '':
+                    hand_label = keypoint_classifier_labels[hand_sign_id]
+                    count_hand_label = 0
+                else:
+                    temp = keypoint_classifier_labels[hand_sign_id]
+                    if hand_label == temp:
+                        count_hand_label = count_hand_label + 1
+                    else:
+                        hand_label = ''
+                print(count_hand_label)
+                
                 # Drawing part
-                debug_image = draw_bounding_rect(use_brect, debug_image, brect)
+                debug_image = draw_bounding_rect(use_brect, debug_image, brect, count_hand_label)
                 debug_image = draw_landmarks(debug_image, landmark_list)
                 debug_image = draw_info_text(
                     debug_image,
@@ -619,17 +696,20 @@ def draw_landmarks(image, landmark_point):
     return image
 
 
-def draw_bounding_rect(use_brect, image, brect):
+def draw_bounding_rect(use_brect, image, brect, count):
     if use_brect:
         # Outer rectangle
-        cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[3]),
-                     (0, 0, 0), 1)
+        if count >= 10:
+            cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[3]),
+                        (0, 255, 0), 1)
+        else:
+            cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[3]),
+                        (0, 0, 0), 1)
 
     return image
 
 
-def draw_info_text(image, brect, handedness, hand_sign_text,
-                   finger_gesture_text):
+def draw_info_text(image, brect, handedness, hand_sign_text, finger_gesture_text):
     cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[1] - 22),
                  (0, 0, 0), -1)
 
@@ -674,7 +754,6 @@ def draw_info(image, fps, mode, number):
                        cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1,
                        cv.LINE_AA)
     return image
-
 
 if __name__ == '__main__':
     main()

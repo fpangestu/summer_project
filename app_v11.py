@@ -34,6 +34,8 @@ sys.path.insert(0, 'D:/4_KULIAH_S2/Summer_Project/summer_project/mediapipe')
 from mdp_main import Mediapipe
 
 
+
+
 ## GRID LAYOUT
 class MainWidget(GridLayout):
     def __init__(self, **kwargs):
@@ -45,6 +47,7 @@ class MainWidget(GridLayout):
         self.T = []
         self.obj_position = {}
         self.robot_parkir = []
+        self.mediapipe = Mediapipe()
 
         # Image
         self.object_default = 'test.png'
@@ -57,6 +60,7 @@ class MainWidget(GridLayout):
         self.inf_status_camera_calib = ""
         self.inf_status_marker_coordinate = ""
         self.inf_coordinate_robot_final = ""
+        self.gesture_status = ''
         # self.inf_coordinate_marker_center_final = ""
         
         try:
@@ -111,30 +115,18 @@ class MainWidget(GridLayout):
             cols = 2,
             rows = 1
         )
-        self.camera_cv  = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        self.camera_cv = cv2.VideoCapture(1, cv2.CAP_DSHOW)
         self.camera_cv.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.camera_cv.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        self.image = Image()
-        Clock.schedule_interval(self.load_video, 1.0/11.0)
-        left_grid_1.add_widget(self.image)
-
-        self.camera_cv_robot  = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        self.camera_cv_robot = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         self.camera_cv_robot.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.camera_cv_robot.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        self.image = Image()
         self.image_2 = Image()
-        Clock.schedule_interval(self.load_video_2, 1.0/4.0)
+        Clock.schedule_interval(self.load_video, 1.0/8.0)
+        left_grid_1.add_widget(self.image)
         left_grid_1.add_widget(self.image_2)
         left_grid.add_widget(left_grid_1)
-
-        # self.camera_cv  = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-        # self.camera_cv_robot  = cv2.VideoCapture(1, cv2.CAP_DSHOW)
-        # Clock.schedule_interval(self.load_video, 1.0/9.0)
-        # Clock.schedule_interval(self.load_video_2, 1.0/10.0)
-        # self.image = Image()
-        # self.image_2 = Image()
-        # left_grid_1.add_widget(self.image)
-        # left_grid_1.add_widget(self.image_2)
-        # left_grid.add_widget(left_grid_1)
 
         # Left Grid 2
         left_grid_2 = GridLayout(
@@ -157,7 +149,7 @@ class MainWidget(GridLayout):
                 width = 350,
                 padding = 5,
                 cols = 1,
-                rows = 5
+                rows = 4
             )
         left_grid_2_1.add_widget(Label(text = "Object 1", size_hint=(.2, .2)))
         left_grid_2_1_1 = GridLayout(
@@ -169,12 +161,12 @@ class MainWidget(GridLayout):
         show_gesture_1 = Image(source=gesture_1)
         left_grid_2_1_1.add_widget(show_gesture_1)
         left_grid_2_1.add_widget(left_grid_2_1_1)
-        self.input_object_name = TextInput(text='1', multiline=False, size_hint=(.2, .2))
-        left_grid_2_1.add_widget(self.input_object_name)
+        # self.input_object_name_1 = TextInput(text='1', multiline=False, size_hint=(.2, .2))
+        # left_grid_2_1.add_widget(self.input_object_name)
         self.input_object_z = TextInput(text='12', multiline=False, size_hint=(.2, .2))
         left_grid_2_1.add_widget(self.input_object_z)
         btn_grab_obj = Button(text="Go", font_size=16, size_hint=(.30, .30))
-        btn_grab_obj.bind(on_press=self.final_calculation)
+        # btn_grab_obj.bind(on_press='')
         left_grid_2_1.add_widget(btn_grab_obj)
         left_grid_2.add_widget(left_grid_2_1)
         left_grid_2_2 = GridLayout(
@@ -182,7 +174,7 @@ class MainWidget(GridLayout):
                 width = 350,
                 padding = 5,
                 cols = 1,
-                rows = 5
+                rows = 4
             )
         left_grid_2_2.add_widget(Label(text = "Object 2", size_hint=(.2, .2)))
         left_grid_2_2_1 = GridLayout(
@@ -194,12 +186,12 @@ class MainWidget(GridLayout):
         show_gesture_2 = Image(source=gesture_2)
         left_grid_2_2_1.add_widget(show_gesture_2)
         left_grid_2_2.add_widget(left_grid_2_2_1)
-        self.input_object_name = TextInput(text='1', multiline=False, size_hint=(.2, .2))
-        left_grid_2_2.add_widget(self.input_object_name)
+        # self.input_object_name_2 = TextInput(text='2', multiline=False, size_hint=(.2, .2))
+        # left_grid_2_2.add_widget(self.input_object_name)
         self.input_object_z = TextInput(text='12', multiline=False, size_hint=(.2, .2))
         left_grid_2_2.add_widget(self.input_object_z)
         btn_grab_obj = Button(text="Go", font_size=16, size_hint=(.30, .30))
-        btn_grab_obj.bind(on_press=self.final_calculation)
+        # btn_grab_obj.bind(on_press='')
         left_grid_2_2.add_widget(btn_grab_obj)
         left_grid_2.add_widget(left_grid_2_2)
         left_grid_2_3 = GridLayout(
@@ -207,7 +199,7 @@ class MainWidget(GridLayout):
                 width = 350,
                 padding = 5,
                 cols = 1,
-                rows = 5
+                rows = 4
             )
         left_grid_2_3.add_widget(Label(text = "Object 3", size_hint=(.2, .2)))
         left_grid_2_3_1 = GridLayout(
@@ -219,12 +211,12 @@ class MainWidget(GridLayout):
         show_gesture_3 = Image(source=gesture_3)
         left_grid_2_3_1.add_widget(show_gesture_3)        
         left_grid_2_3.add_widget(left_grid_2_3_1)
-        self.input_object_name = TextInput(text='1', multiline=False, size_hint=(.2, .2))
-        left_grid_2_3.add_widget(self.input_object_name)
+        # self.input_object_name_3 = TextInput(text='3', multiline=False, size_hint=(.2, .2))
+        # left_grid_2_3.add_widget(self.input_object_name)
         self.input_object_z = TextInput(text='12', multiline=False, size_hint=(.2, .2))
         left_grid_2_3.add_widget(self.input_object_z)
         btn_grab_obj = Button(text="Go", font_size=16, size_hint=(.30, .30))
-        btn_grab_obj.bind(on_press=self.final_calculation)
+        # btn_grab_obj.bind(on_press='')
         left_grid_2_3.add_widget(btn_grab_obj)
         left_grid_2.add_widget(left_grid_2_3)
         left_grid_2_4 = GridLayout(
@@ -232,7 +224,7 @@ class MainWidget(GridLayout):
                 width = 350,
                 padding = 5,
                 cols = 1,
-                rows = 5
+                rows = 4
             )
         left_grid_2_4.add_widget(Label(text = "Object 4", size_hint=(.2, .2)))
         left_grid_2_4_1 = GridLayout(
@@ -244,12 +236,12 @@ class MainWidget(GridLayout):
         show_gesture_4 = Image(source=gesture_4)
         left_grid_2_4_1.add_widget(show_gesture_4)   
         left_grid_2_4.add_widget(left_grid_2_4_1)
-        self.input_object_name = TextInput(text='1', multiline=False, size_hint=(.2, .2))
-        left_grid_2_4.add_widget(self.input_object_name)
+        # self.input_object_name_4 = TextInput(text='4', multiline=False, size_hint=(.2, .2))
+        # left_grid_2_4.add_widget(self.input_object_name)
         self.input_object_z = TextInput(text='12', multiline=False, size_hint=(.2, .2))
         left_grid_2_4.add_widget(self.input_object_z)
         btn_grab_obj = Button(text="Go", font_size=16, size_hint=(.30, .30))
-        btn_grab_obj.bind(on_press=self.final_calculation)
+        # btn_grab_obj.bind(on_press='')
         left_grid_2_4.add_widget(btn_grab_obj)
         left_grid_2.add_widget(left_grid_2_4)
         
@@ -355,6 +347,10 @@ class MainWidget(GridLayout):
         self.add_widget(right_grid)
 
     def load_video(self, *args):
+        self.load_video_camera_2()
+        self.load_video_camera_1()
+    
+    def load_video_camera_1(self, *args):
         """
         Grabs, decodes and returns the video frame from device (webcam, camera, ect).
         Convert it into texture to shown in Application (Kivy widget).  
@@ -369,9 +365,10 @@ class MainWidget(GridLayout):
         self.image_frame = frame
         
         # Hand Gesture
-        mediapipe = Mediapipe()
-        mdp_frame = mediapipe.main(frame)
+        mdp_frame, self.gesture_status = self.mediapipe.main(frame)
         
+        # Realease Memory
+        # del mediapipe
 
         # Convert frame into texture for Kivy
         buffer = cv2.flip(mdp_frame, 0).tostring()                                                      
@@ -379,7 +376,19 @@ class MainWidget(GridLayout):
         texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
         self.image.texture = texture
 
-    def load_video_2(self, *args):
+        if (self.gesture_status != ''):
+            if(self.gesture_status == 'Gesture_1'):
+                self.final_calculation(1)
+            elif(self.gesture_status == 'Gesture_2'):
+                self.final_calculation(2)
+            elif(self.gesture_status == 'Gesture_3'):
+                self.final_calculation(3)
+            else:
+                self.final_calculation(4)
+            self.gesture_status = ''
+
+
+    def load_video_camera_2(self, *args):
         """
         Grabs, decodes and returns the video frame from device (webcam, camera, ect).
         Convert it into texture to shown in Application (Kivy widget).  
@@ -392,6 +401,7 @@ class MainWidget(GridLayout):
             2. ROI of image (texture): Portioan of image that contain object
         """
         ret, frame_robot = self.camera_cv_robot.read()    
+        self.image_frame_robot = frame_robot.copy()
         frame_2 = frame_robot
         frame_gray = cv2.cvtColor(frame_2, cv2.COLOR_BGR2GRAY)                                      # Convert into gray
 
@@ -431,10 +441,11 @@ class MainWidget(GridLayout):
         self.box2_x = box2_3 + (abs(box2_3-box2_1)*0.5)
         self.box2_y = box2_2 + (abs(box2_2-box2_4)*0.5)
         cv2.rectangle(frame_2, (box2_1-80, box2_2+110), (box2_3+80, box2_4-110),(0, 0, 255), 2)
+        # cv2.circle(frame_2, (int(self.box2_x), int(self.box2_y)), 4, (0, 255, 0), -1)
 
         c_number = 0
         self.obj_position = {}
-        obj_id = 1
+        # obj_id = 1
         contours, hierarchy = cv2.findContours(thresInv_adaptive, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)         # Get the contours and the hierarchy of the object in the frame
         for c in contours:
             # Draw a minimum area rotared rectangle around ROI
@@ -458,19 +469,20 @@ class MainWidget(GridLayout):
 
                 # Convert frame into texture for Kivy
                 # Update component in the UI with ROI of image
-                frame_obj = frame_2[int(y-height*0.5)-20:int(y+height*0.5)+20, int(x-width*0.5)-20:int(x+width*0.5)+20]
-                buffer = cv2.flip(frame_obj, 0).tostring()
-                texture = Texture.create(size=(frame_obj.shape[1], frame_obj.shape[0]), colorfmt='bgr')
-                texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
-                if(obj_id == 1):
-                    self.object_1.texture = texture
-                if(obj_id == 2):
-                    self.object_2.texture = texture
-                if(obj_id == 3):
-                    self.object_3.texture = texture
-                if(obj_id == 4):
-                    self.object_4.texture = texture
-                obj_id += 1
+                if (int(width) < 80 and int(height) < 80):
+                    frame_obj = frame_2[int(y-height*0.5)-30:int(y+height*0.5)+30, int(x-width*0.5)-30:int(x+width*0.5)+30]
+                    buffer = cv2.flip(frame_obj, 0).tostring()
+                    texture = Texture.create(size=(frame_obj.shape[1], frame_obj.shape[0]), colorfmt='bgr')
+                    texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
+                    if(c_number == 1):
+                        self.object_1.texture = texture
+                    if(c_number == 2):
+                        self.object_2.texture = texture
+                    if(c_number == 3):
+                        self.object_3.texture = texture
+                    if(c_number == 4):
+                        self.object_4.texture = texture
+                    # obj_id += 1
 
         # Convert frame into texture for Kivy
         buffer = cv2.flip(frame_2, 0).tostring()
@@ -489,7 +501,7 @@ class MainWidget(GridLayout):
         Returns:
             image texture (texture): OpenGL textures for Kivy images for Images Calibration 
         """
-        frame = self.image_frame.copy()
+        frame = self.image_frame_robot.copy()
         self.image_frame_calibration = frame.copy()
         buffer = cv2.flip(frame, 0).tostring()
         texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
@@ -1286,7 +1298,7 @@ class MainWidget(GridLayout):
 
         return T
 
-    def final_calculation(self, *args):
+    def final_calculation(self, position, *args):
         """
         Calculating object coordinate in the frame for robot cordiate 
 
@@ -1318,7 +1330,7 @@ class MainWidget(GridLayout):
         coor_zero = coor_marker1[0] + coor_rbt1[1] * diff_y
         # print(f'Zero: {coor_zero}')
 
-        corr_obj = self.obj_position[int(self.input_object_name.text)]
+        corr_obj = self.obj_position[position]
         coor_new = [corr_obj[0], corr_obj[1]]
 
         # Y Coordinate
