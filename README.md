@@ -1,6 +1,6 @@
 Summer Project
 =================
-This project aims to create an application to control a robot so that it can move an item (matches) from its original location to the desired location using hand gestures. As an input device, the robot used the [Logitech C922 PRO HD STREAM WEBCAM](https://choosealicense.com/licenses/mit/) and for hand gestures used a laptop webcam. The robot used is [UFACTORY uArm SwiftPro](https://www.ufactory.cc/product-page/ufactory-uarm-test-kit) with Suction Cup.
+This project aims to make a robot that can move an object using hand command, so the robot will move an object (match) based on the hand gesture we give to the camera. The robot will use a camera as an input to get the object's position and the robot will used hand gesture recognition to understand the command. This application can control a robot and process the recognition. As an input device, the robot used the [Logitech C922 PRO HD STREAM WEBCAM](https://choosealicense.com/licenses/mit/) and for hand gestures used a laptop webcam. The robot used is [UFACTORY uArm SwiftPro](https://www.ufactory.cc/product-page/ufactory-uarm-test-kit) with Suction Cup.
 
 Table of contents
 =================
@@ -11,15 +11,18 @@ Table of contents
 - [Calibration](#calibration)
   - [Camera Calibration](#camera-calibration)
   - [Robot Calibration](#robot-calibration)
-- [Hand Gesture Recognition](#hand-gesture-recognition)
+- [Mediapipe](#mediapipe)
+  - [Hand Gesture Recognition](#hand-gesture-recognition)
+- [Limitation](#limitation)
+- [Reference](#reference)
 
 Requirements
 =================
 1. Python 3.10.5
 2. OpenCV Contrib 4.6.0.66
-2. Kivy 2.1.0
-3. uArm-Python-SDK
-4. Mediapipe 0.8.10.1
+3. Kivy 2.1.0
+4. uArm-Python-SDK
+5. Mediapipe 0.8.10.1
 
 Instalation
 =================
@@ -68,11 +71,29 @@ Follow this step to calibrate camera using ArUco marker.
 2. Take around 10 images of the printed board on a flat surface, take image from different position and angles.
 ![The ArUco Marker position](https://github.com/mahasiswateladan/summer_project/blob/main/img/aruco_img.PNG)
 3. After that, place the marker in the middle of the frame and calibrate it to detect every masker in the frame get the information from every marker.
-![The ArUco Marker detection](https://github.com/mahasiswateladan/summer_project/blob/main/img/aruco_img.PNG)
-
+![The ArUco Marker detection](https://github.com/mahasiswateladan/summer_project/blob/main/img/IMG_FINAL_20220826_160426.png)
 
 Robot Calibration
 -----------------
 
-Hand Gesture Recognition
+Mediapipe
 =================
+MediaPipe Hands is a high-fidelity hand and finger tracking solution. It employs machine learning (ML) to infer 21 3D landmarks of a hand from just a single frame. Whereas current state-of-the-art approaches rely primarily on powerful desktop environments for inference, this method achieves real-time performance on a mobile phone, and even scales to multiple hands. MediaPipe Hands utilizes an ML pipeline consisting of multiple models working together: A palm detection model that operates on the full image and returns an oriented hand bounding box. A hand landmark model that operates on the cropped image region defined by the palm detector and returns high-fidelity 3D hand keypoints.
+
+Hand Gesture Recognition
+-----------------
+
+Limitation
+=================
+There is some limitation in this project, and this is happening because there are some faulty in the robot:
+1. There is a faulty in the Limit switch module, so the robot doesn't know when to stop. To solve the first problem, we add an input form for the user, so the user has to fill it with the object's height.
+2. There is a faulty on the conveyor belt, it can't move normally, so we exclude the conveyor from this project
+
+Reference
+=================
+- [Kivy](https://kivy.org/)
+- [ArUco Marker Detection](https://docs.opencv.org/4.x/d9/d6a/group__aruco.html#gacf03e5afb0bc516b73028cf209984a06)
+- [Calibration with ArUco and ChArUco](https://docs.opencv.org/4.x/da/d13/tutorial_aruco_calibration.html)
+- [uArm](https://github.com/uArm-Developer/uArm-Python-SDK)
+- [Mediapipe](https://google.github.io/mediapipe/solutions/hands.html)
+- [Hand-Gesture Recognition Using Mediapipe](https://github.com/Kazuhito00/hand-gesture-recognition-using-mediapipe)
