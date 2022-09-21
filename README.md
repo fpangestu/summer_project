@@ -44,7 +44,10 @@ Instalation
 
 3. uArm-Python-SDK
 	The library only supports uArm Swift/SwiftPro.
+<<<<<<< HEAD
     - Download and install the last driver for the robot here [uArm Swift/SwiftPro driver](https://www.ufactory.cc/download-uarm-robot).
+=======
+>>>>>>> 4f13f68d93bf68294187de2fdc77788dce86ad6f
 	- Download uArm-Python-SDK from original [repositori](https://github.com/uArm-Developer/uArm-Python-SDK/tree/2.0)
 	- Use the package manager [pip](https://pip.pypa.io/en/stable/) to install uArm-Python-SDK.
 
@@ -62,15 +65,22 @@ Calibration
 
 Camera Calibration
 -----------------
+<<<<<<< HEAD
 The ArUco is used for calibrate camera. Camera calibration consists in obtaining the camera intrinsic parameters and distortion coefficients. This parameters remain fixed unless the camera optic is modified, thus camera calibration only need to be done once. Using the ArUco module, calibration can be performed based on ArUco markers corners.
 Follow this step to calibrate camera using ArUco marker.
 1. Download and print the ArUco marker in A4 paper 
 2. Take around 10 images of the printed board on a flat surface, take image from different position and angles.
 3. After that, place the marker in the middle of the frame and calibrate it to get the information from every marker.
 
+=======
+>>>>>>> 4f13f68d93bf68294187de2fdc77788dce86ad6f
 
 Robot Calibration
 -----------------
 
 Hand Gesture Recognition
+<<<<<<< HEAD
 =================
+=======
+=================
+>>>>>>> 4f13f68d93bf68294187de2fdc77788dce86ad6f
