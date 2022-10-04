@@ -1,6 +1,7 @@
 from ctypes import alignment
 import os
 import pathlib
+from types import NoneType
 from kivy.factory import Factory
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
@@ -118,6 +119,7 @@ class MainWidget(GridLayout):
         self.camera_cv = cv2.VideoCapture(1, cv2.CAP_DSHOW)
         self.camera_cv.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.camera_cv.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
         self.camera_cv_robot = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         self.camera_cv_robot.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.camera_cv_robot.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
@@ -400,95 +402,125 @@ class MainWidget(GridLayout):
             1. image texture (texture): Image texture that contain area for placec object
             2. ROI of image (texture): Portioan of image that contain object
         """
-        ret, frame_robot = self.camera_cv_robot.read()    
-        self.image_frame_robot = frame_robot.copy()
-        frame_2 = frame_robot
-        frame_gray = cv2.cvtColor(frame_2, cv2.COLOR_BGR2GRAY)                                      # Convert into gray
+        if(self.camera_cv_robot.isOpened()):
+            ret, frame_robot = self.camera_cv_robot.read()   
+            self.image_frame_robot = frame_robot.copy()
+            frame_2 = frame_robot
+            frame_gray = cv2.cvtColor(frame_2, cv2.COLOR_BGR2GRAY)                                      # Convert into gray
 
-        # Remove noise by blurring with a Gaussian filter ( kernel size = 7 )
-        img_blur = cv2.GaussianBlur(frame_gray, (7, 7), sigmaX=0, sigmaY=0)             
+            # Remove noise by blurring with a Gaussian filter ( kernel size = 7 )
+            img_blur = cv2.GaussianBlur(frame_gray, (7, 7), sigmaX=0, sigmaY=0)             
 
-        ###############     Threshold         ###############
-        # apply basic thresholding -- the first parameter is the image
-        # we want to threshold, the second value is is our threshold
-        # check; if a pixel value is greater than our threshold (in this case, 200), we set it to be *black, otherwise it is *white*
-        thresInv_adaptive = cv2.adaptiveThreshold(img_blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 6)
+            ###############     Threshold         ###############
+            # apply basic thresholding -- the first parameter is the image
+            # we want to threshold, the second value is is our threshold
+            # check; if a pixel value is greater than our threshold (in this case, 200), we set it to be *black, otherwise it is *white*
+            thresInv_adaptive = cv2.adaptiveThreshold(img_blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 6)
 
-        # Create small kernel for Erosion & Dilation
-        # Dilation used to makes objects more visible 
-        # Erosion used to removes floating pixels and thin lines so that only substantive objects remain
-        # We used Erosion & Dilation 7 times to get best output
-        small_kernel = np.ones((3, 3), np.uint8)
-        thresInv_adaptive=cv2.dilate(thresInv_adaptive, small_kernel, iterations=7)
-        thresInv_adaptive=cv2.erode(thresInv_adaptive, small_kernel, iterations=7)
+            # Create small kernel for Erosion & Dilation
+            # Dilation used to makes objects more visible 
+            # Erosion used to removes floating pixels and thin lines so that only substantive objects remain
+            # We used Erosion & Dilation 7 times to get best output
+            small_kernel = np.ones((3, 3), np.uint8)
+            thresInv_adaptive=cv2.dilate(thresInv_adaptive, small_kernel, iterations=7)
+            thresInv_adaptive=cv2.erode(thresInv_adaptive, small_kernel, iterations=7)
 
-        ###############     Find Contour          ###############
-        # Get shape of frame
-        h, w, c = frame_2.shape
+            ###############     Find Contour          ###############
+            # Get shape of frame
+            h, w, c = frame_2.shape
 
-        # Create Box where we place the object
-        box1_1 = 50
-        box1_2 = 10
-        box1_3 = int(w *0.5)-10
-        box1_4 = int(h)-150
-        cv2.rectangle(frame_2, (box1_1, box1_2), (box1_3, box1_4),(255, 0, 0), 2)
+            # Create Box where we place the object
+            box1_1 = 50
+            box1_2 = 10
+            box1_3 = int(w *0.5)-10
+            box1_4 = int(h)-150
+            cv2.rectangle(frame_2, (box1_1, box1_2), (box1_3, box1_4),(255, 0, 0), 2)
 
-        # Create Box where the robot has to move the object 
-        box2_1 = int(w-50)
-        box2_2 = 10
-        box2_3 = int(w * 0.5) + 10
-        box2_4 = int(h)-150
-        self.box2_x = box2_3 + (abs(box2_3-box2_1)*0.5)
-        self.box2_y = box2_2 + (abs(box2_2-box2_4)*0.5)
-        cv2.rectangle(frame_2, (box2_1-80, box2_2+110), (box2_3+80, box2_4-110),(0, 0, 255), 2)
-        # cv2.circle(frame_2, (int(self.box2_x), int(self.box2_y)), 4, (0, 255, 0), -1)
+            # Create Box where the robot has to move the object 
+            box2_1 = int(w-50)
+            box2_2 = 10
+            box2_3 = int(w * 0.5) + 10
+            box2_4 = int(h)-150
+            self.box2_x = box2_3 + (abs(box2_3-box2_1)*0.5)
+            self.box2_y = box2_2 + (abs(box2_2-box2_4)*0.5)
+            # cv2.rectangle(frame_2, (box2_1-80, box2_2+110), (box2_3+80, box2_4-110),(0, 0, 255), 2)
+            # cv2.circle(frame_2, (int(self.box2_x), int(self.box2_y)), 4, (0, 255, 0), -1)
 
-        c_number = 0
-        self.obj_position = {}
-        # obj_id = 1
-        contours, hierarchy = cv2.findContours(thresInv_adaptive, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)         # Get the contours and the hierarchy of the object in the frame
-        for c in contours:
-            # Draw a minimum area rotared rectangle around ROI
-            # Input : Takes contours as input
-            # Output : Box2D structure contains the following detail (center(x, y), (width, height), angle of rotatino)
-            box = cv2.minAreaRect(c)                    
-            (x, y), (width, height), angle = box    
-            
-            # Check if the ROI inside Box where we have to place the object 
-            if ((int(x) > box1_1+30) and (int(x) < box1_3-30) and (int(y) > box1_2+30) and (int(y) < box1_4-30)):
-                c_number += 1
-                rect = cv2.boxPoints(box)                       # Convert the Box2D structure to 4 corner points 
-                box = np.int0(rect)                             # Converts 4 corner Points into integer type
-                cv2.drawContours(frame_2,[box],0,(0,0,255),2)   # Draw contours using 4 corner points
-                str_object_name = "Object " + str(c_number)
-                cv2.putText(frame_2, str_object_name, (box[0][0] + 2, box[0][1]+ 2), 0, 0.3, (0, 255, 0))
-                cv2.circle(frame_2, (int(x), int(y)), 4, (0, 255, 0), -1)       # Draw circle in the middle of contour
-                str_object = str(round(x, 2)) + ", " + str(round(y, 2))
-                cv2.putText(frame_2, str_object, (int(x), int(y) + 10), 0, 0.3, (0, 0, 255))
-                self.obj_position[c_number] = (x, y)            # Save coordinate of the object 
+            c_number = 0
+            self.obj_position = {}
+            # obj_id = 1
+            contours, hierarchy = cv2.findContours(thresInv_adaptive, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)         # Get the contours and the hierarchy of the object in the frame
+            for c in contours:
+                # Draw a minimum area rotared rectangle around ROI
+                # Input : Takes contours as input
+                # Output : Box2D structure contains the following detail (center(x, y), (width, height), angle of rotatino)
+                box = cv2.minAreaRect(c)                    
+                (x, y), (width, height), angle = box    
+                
+                # Check if the ROI inside Box where we have to place the object 
+                if ((int(x) > box1_1+30) and (int(x) < box1_3-30) and (int(y) > box1_2+30) and (int(y) < box1_4-30)):
+                    if (int(width) < 80 and int(height) < 80):
+                        c_number += 1
+                        rect = cv2.boxPoints(box)                       # Convert the Box2D structure to 4 corner points 
+                        box = np.int0(rect)                             # Converts 4 corner Points into integer type
+                        cv2.drawContours(frame_2,[box],0,(0,0,255),2)   # Draw contours using 4 corner points
+                        str_object_name = "Object " + str(c_number)
+                        cv2.putText(frame_2, str_object_name, (box[0][0] + 2, box[0][1]+ 2), 0, 0.3, (0, 255, 0))
+                        cv2.circle(frame_2, (int(x), int(y)), 4, (0, 255, 0), -1)       # Draw circle in the middle of contour
+                        str_object = str(round(x, 2)) + ", " + str(round(y, 2))
+                        cv2.putText(frame_2, str_object, (int(x), int(y) + 10), 0, 0.3, (0, 0, 255))
+                        self.obj_position[c_number] = (x, y)            # Save coordinate of the object 
 
-                # Convert frame into texture for Kivy
-                # Update component in the UI with ROI of image
-                if (int(width) < 80 and int(height) < 80):
-                    frame_obj = frame_2[int(y-height*0.5)-30:int(y+height*0.5)+30, int(x-width*0.5)-30:int(x+width*0.5)+30]
-                    buffer = cv2.flip(frame_obj, 0).tostring()
-                    texture = Texture.create(size=(frame_obj.shape[1], frame_obj.shape[0]), colorfmt='bgr')
-                    texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
-                    if(c_number == 1):
-                        self.object_1.texture = texture
-                    if(c_number == 2):
-                        self.object_2.texture = texture
-                    if(c_number == 3):
-                        self.object_3.texture = texture
-                    if(c_number == 4):
-                        self.object_4.texture = texture
-                    # obj_id += 1
+                        # Convert frame into texture for Kivy
+                        # Update component in the UI with ROI of image
+                        # frame_obj = frame_2[int(y-height*0.5)-30:int(y+height*0.5)+30, int(x-width*0.5)-30:int(x+width*0.5)+30]
+                        frame_obj = frame_2[int(y-height*0.5):int(y+height*0.5), int(x-width*0.5):int(x+width*0.5)]
+                        # Get top left part of ROI of square region
+                        # xt = int(x - width / 2)
+                        # yt = int(y - height / 2)
 
-        # Convert frame into texture for Kivy
-        buffer = cv2.flip(frame_2, 0).tostring()
-        texture = Texture.create(size=(frame_2.shape[1], frame_2.shape[0]), colorfmt='bgr')
-        texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
-        self.image_2.texture = texture
+                        # if(xt < 0):
+                        #     xt = 0
+                        # elif(yt < 0):
+                        #     yt = 0
+
+                        # # Get bottom right part of ROI of square
+                        # xb = xt + int(width)
+                        # yb = yt + int(height)
+
+                        # if(xb > w):
+                        #     xb = w
+                        # elif(yb > h):
+                        #     yb = h
+
+                        # frame_obj = frame_2[yt:yb, xt:xb]
+
+                        # Show in the interface
+                        # try
+                        #     buffer = cv2.flip(frame_obj, 0).tostring()
+                        # except
+                        #     continue
+                        if NoneType:
+                            continue
+                        else :
+                            buffer = cv2.flip(frame_obj, 0).tostring()
+                        texture = Texture.create(size=(frame_obj.shape[1], frame_obj.shape[0]), colorfmt='bgr')
+                        texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
+                        if(c_number == 1):
+                            self.object_1.texture = texture
+                        if(c_number == 2):
+                            self.object_2.texture = texture
+                        if(c_number == 3):
+                            self.object_3.texture = texture
+                        if(c_number == 4):
+                            self.object_4.texture = texture
+                        # obj_id += 1
+
+            # Convert frame into texture for Kivy
+            buffer = cv2.flip(frame_2, 0).tostring()
+            texture = Texture.create(size=(frame_2.shape[1], frame_2.shape[0]), colorfmt='bgr')
+            texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
+            self.image_2.texture = texture
 
     def load_video_calibration(self, *args):
         """
@@ -501,12 +533,14 @@ class MainWidget(GridLayout):
         Returns:
             image texture (texture): OpenGL textures for Kivy images for Images Calibration 
         """
-        frame = self.image_frame_robot.copy()
-        self.image_frame_calibration = frame.copy()
-        buffer = cv2.flip(frame, 0).tostring()
-        texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
-        texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
-        self.image_calibration.texture = texture
+        if(self.camera_cv_calibration.isOpened()):
+            ret, frame = self.camera_cv_calibration.read()    
+            # frame = self.image_frame_robot.copy()
+            self.image_frame_calibration = frame.copy()
+            buffer = cv2.flip(frame, 0).tostring()
+            texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
+            texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
+            self.image_calibration.texture = texture
 
     def camera_calibration(self, *args):
         """
@@ -540,6 +574,11 @@ class MainWidget(GridLayout):
             cols = 1, 
             rows = 1
         )
+        Clock.schedule_interval(self.load_video, 1.0/8.0).cancel()
+        self.camera_cv_robot.release()
+        self.camera_cv_calibration = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        self.camera_cv_calibration.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.camera_cv_calibration.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         Clock.schedule_interval(self.load_video_calibration, 1.0/10.0)
         self.image_calibration = Image()
         layout_1_1_1.add_widget(self.image_calibration)
@@ -894,6 +933,14 @@ class MainWidget(GridLayout):
         # Change status
         self.status_camera_calib_final.text = self.inf_status_camera_calib
 
+        # Release the camera
+        Clock.schedule_interval(self.load_video_calibration, 1.0/10.0).cancel()
+        self.camera_cv_calibration.release()
+        self.camera_cv_robot = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        self.camera_cv_robot.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.camera_cv_robot.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        Clock.schedule_interval(self.load_video, 1.0/8.0).cancel()
+
     def calculate_final_matrix(self, *args):   
         """
         Calculating robot coordinate from T and marker translation vector
@@ -949,6 +996,8 @@ class MainWidget(GridLayout):
         Returns:
             Robot coordinate for every Marker
         """
+        Clock.schedule_interval(self.load_video, 1.0/8.0).cancel()
+        self.camera_cv_robot.release()
         # Check if robot connected to the computer
         if self.status_robot.text != "Connected":
             layout = GridLayout(cols = 1, padding = 10)
@@ -1190,7 +1239,13 @@ class MainWidget(GridLayout):
         self.inf_coordinate_robot_final = "Done"
         self.status_robot_calib_final.text = self.inf_coordinate_robot_final
 
-        self.calculate_final_matrix()                               
+        self.calculate_final_matrix()    
+
+        # Turn Camera On
+        self.camera_cv_robot = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        self.camera_cv_robot.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.camera_cv_robot.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        Clock.schedule_interval(self.load_video, 1.0/8.0)     
         
     def detach_servo(self, *args):
         """
@@ -1383,7 +1438,7 @@ class MainWidget(GridLayout):
         coor_z = coor_z + int(self.input_object_z.text)
 
         print(f'X: {coor_x}, Y: {coor_y}, Z: {coor_z}')
-        self.move_object(round(coor_x, 4), round(coor_y, 4), round(coor_z, 4), round(coor_x_dest, 4), round(coor_y_dest, 4), round(coor_z, 4))
+        self.move_object(round(coor_x, 4), round(coor_y, 4), round(coor_z, 4), round(coor_x, 4), round(coor_y*-1, 4), round(coor_z, 4))
     
     def move_object(self, x_start, y_start, z_start, x_end, y_end, z_end, speed=30, wait=True):
         """

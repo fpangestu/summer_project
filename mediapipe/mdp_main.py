@@ -187,7 +187,7 @@ class Mediapipe:
     def draw_bounding_rect(self, use_brect, image, brect, count, label):
         if use_brect:
             # Outer rectangle
-            if count >= 20:
+            if count >= 40:
                 cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[3]),
                             (0, 255, 0), 1)
                 status = label
