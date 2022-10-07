@@ -1,4 +1,8 @@
 # Summer Project
+| ![Interface of Application](https://github.com/mahasiswateladan/summer_project/blob/main/img/giiiffffff.gif) |
+|:--:| 
+| *Interface of Application* |
+
 This project aims to make a robot that can move an object using hand command, so the robot will move an object (match) based on the hand gesture we give to the camera. The robot will use a camera as an input to get the object's position and the robot will used hand gesture recognition to understand the command. This application can control a robot and process the recognition. As an input device, the robot used the [Logitech C922 PRO HD STREAM WEBCAM](https://choosealicense.com/licenses/mit/) and for hand gestures used a laptop webcam. The robot used is [UFACTORY uArm SwiftPro](https://www.ufactory.cc/product-page/ufactory-uarm-test-kit) with Suction Cup.
 
 # Table of contents
