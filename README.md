@@ -9,8 +9,7 @@ This project aims to make a robot that can move an object using hand command, so
  - [Calibration](#calibration)
 	- [Camera Calibration](#camera-calibration)
 	- [Robot Calibration](#robot-calibration)
- - [Mediapipe](#mediapipe)
-	- [Hand Gesture Recognition](#hand-gesture-recognition)
+ - [Hand Gesture Recognition](#hand-gesture-recognition)
  - [Tutorial](#tutorial)
 	- [Introduction](#introduction)
 	- [Camera Calibration](#camera-calibration)
@@ -62,20 +61,33 @@ pip install mediapipe
 ```
 
 # Calibration
+There are two types of calibration we have to do first, camera calibration and second, robot calibration. For both calibrations, we used ArUco Board to get intrinsic and extrinsic parameters from the robot and the camera.
 ## Camera Calibration
-
 The ArUco is used for calibrate camera. Camera calibration consists in obtaining the camera intrinsic parameters and distortion coefficients. This parameters remain fixed unless the camera optic is modified, thus camera calibration only need to be done once. Using the ArUco module, calibration can be performed based on ArUco markers corners.
 Follow this step to calibrate camera using ArUco marker.
 1. Download and print the [ArUco](https://github.com/mahasiswateladan/summer_project/blob/main/img/aruco_marker.pdf) marker in A4 paper
 2. Take around 10 images of the printed board on a flat surface, take image from different position and angles.
-![The ArUco Marker position](https://github.com/mahasiswateladan/summer_project/blob/main/img/aruco_img.PNG)
-3. After that, place the marker in the middle of the frame and calibrate it to detect every masker in the frame get the information from every marker.
-![The ArUco Marker detection](https://github.com/mahasiswateladan/summer_project/blob/main/img/IMG_FINAL_20220826_160426.png)
-# Robot Calibration
-## Mediapipe
-MediaPipe Hands is a high-fidelity hand and finger tracking solution. It employs machine learning (ML) to infer 21 3D landmarks of a hand from just a single frame. Whereas current state-of-the-art approaches rely primarily on powerful desktop environments for inference, this method achieves real-time performance on a mobile phone, and even scales to multiple hands. MediaPipe Hands utilizes an ML pipeline consisting of multiple models working together: A palm detection model that operates on the full image and returns an oriented hand bounding box. A hand landmark model that operates on the cropped image region defined by the palm detector and returns high-fidelity 3D hand keypoints.
+| ![The ArUco Marker position](https://github.com/mahasiswateladan/summer_project/blob/main/img/aruco_img.PNG) |
+|:--:| 
+| *The ArUco Marker position* |
+1. After that, place the marker in the middle of the frame and calibrate it to detect every masker in the frame get the information from every marker.
+| ![The ArUco Marker detection](https://github.com/mahasiswateladan/summer_project/blob/main/img/IMG_FINAL_20220826_160426.png) |
+|:--:| 
+| *The ArUco Marker detection* |
 
-## Hand Gesture Recognition
+## Robot Calibration
+This step aims to get the robot coordinate of the marker we choose. We will select four of the markers in every corner of the ArUco board. After we get the robot coordinate (x, y, z), we will calculate the transformation matrix from the robot coordinate and marker coordinate in the frame.
+| ![Marker Corner](https://github.com/mahasiswateladan/summer_project/blob/main/img/figure16.PNG) |
+|:--:| 
+| *Marker Corner* |
+
+# Hand Gesture Recognition
+To do hand gesture recognition, we used the [MediaPipe Python framework](https://google.github.io/mediapipe/). This model work by predicting hand skeleton from only single camera input, and the pipeline consists of two models, a palm detector and a hand landmark prediction. 
+
+| ![Hand Gesture Recognition](https://github.com/mahasiswateladan/summer_project/blob/main/img/gesture.png) |
+|:--:| 
+| *Hand Gesture Recognition* |
+
 
 # Tutorial
 ## Introduction
