@@ -71,10 +71,13 @@ The ArUco is used for calibrate camera. Camera calibration consists in obtaining
 Follow this step to calibrate camera using ArUco marker.
 1. Download and print the [ArUco](https://github.com/mahasiswateladan/summer_project/blob/main/img/aruco_marker.pdf) marker in A4 paper
 2. Take around 10 images of the printed board on a flat surface, take image from different position and angles.
+   
 | ![The ArUco Marker position](https://github.com/mahasiswateladan/summer_project/blob/main/img/aruco_img.PNG) |
 |:--:| 
 | *The ArUco Marker position* |
+
 1. After that, place the marker in the middle of the frame and calibrate it to detect every masker in the frame get the information from every marker.
+   
 | ![The ArUco Marker detection](https://github.com/mahasiswateladan/summer_project/blob/main/img/IMG_FINAL_20220826_160426.png) |
 |:--:| 
 | *The ArUco Marker detection* |
